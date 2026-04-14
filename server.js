@@ -1,29 +1,31 @@
 import express from "express";
 import morgan from "morgan";
-import { loadDB } from "./model/DB.js";
-import eventModel from "./model/schema.js";
-await loadDB();
+import { Queue } from "bullmq";
 
 const app = express();
-app.use(morgan("tiny"));
 
+app.use(morgan("tiny"));
 app.use(express.json());
+
+//create a queue named foo
+const q = new Queue("write-events");
 
 app.post("/event", async function (req, res) {
     try {
         const { eventName, timestamp, meta } = req.body;
 
-        const ev = await eventModel.insertOne({
-            eventName: eventName,
-            timestamp: timestamp,
-            meta: meta
+        //add to queue
+        await q.add("event-item", {
+            item:{
+                eventName: eventName,
+                timestamp: timestamp,
+                meta: meta
+            }
         });
-        console.log(ev);
 
         res.status(200).json({
             message: "Data Inserted Successfully",
-            status_code: 200,
-            id: ev._id
+            status_code: 200
         });
     }
     catch (error) {
