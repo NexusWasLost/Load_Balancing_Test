@@ -9,31 +9,21 @@ app.use(morgan("tiny"));
 
 app.use(express.json());
 
-app.get("/", function (req, res) {
-    try {
-        res.status(200).json({
-            message: "Hello From Server",
-            status_code: 200
-        });
-    }
-    catch (error) {
-        console.log("SERVER ERR: ", error);
-        res.status(500).json({
-            message: "Server Err",
-            status_code: 500
-        });
-    }
-});
-
 app.post("/event", async function (req, res) {
     try {
         const { eventName, timestamp, meta } = req.body;
 
-        await eventModel.insertOne();
+        const ev = await eventModel.insertOne({
+            eventName: eventName,
+            timestamp: timestamp,
+            meta: meta
+        });
+        console.log(ev);
 
         res.status(200).json({
-            message: "Hello From Server",
-            status_code: 200
+            message: "Data Inserted Successfully",
+            status_code: 200,
+            id: ev._id
         });
     }
     catch (error) {
