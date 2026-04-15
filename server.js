@@ -45,7 +45,7 @@ app.get("/count-events", async function (req, res) {
         res.status(200).json({
             message: "Events Counted Successfully",
             count: count,
-            status_code: 500
+            status_code: 200
         });
     }
     catch (error) {
@@ -63,7 +63,7 @@ app.delete("/del-events", async function (req, res) {
         res.status(200).json({
             message: "Events Deleted Successfully",
             count: deletedCount,
-            status_code: 500
+            status_code: 200
         });
     }
     catch (error) {
