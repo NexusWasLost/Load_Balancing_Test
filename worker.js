@@ -1,8 +1,7 @@
 import { Worker } from "bullmq";
 import IORedis from "ioredis";
-import { loadDB } from "./model/DB.js";
+import "./config.js";
 import eventModel from "./model/schema.js";
-await loadDB();
 
 const connection = new IORedis({ maxRetriesPerRequest: null });
 

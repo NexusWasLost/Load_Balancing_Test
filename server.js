@@ -1,6 +1,8 @@
 import express from "express";
 import morgan from "morgan";
 import { Queue } from "bullmq";
+import "./config.js";
+import eventModel from "./model/schema.js";
 
 const app = express();
 
@@ -16,7 +18,7 @@ app.post("/event", async function (req, res) {
 
         //add to queue
         await q.add("event-item", {
-            item:{
+            item: {
                 eventName: eventName,
                 timestamp: timestamp,
                 meta: meta
@@ -26,6 +28,42 @@ app.post("/event", async function (req, res) {
         res.status(200).json({
             message: "Data Inserted Successfully",
             status_code: 200
+        });
+    }
+    catch (error) {
+        console.log("SERVER ERR: ", error);
+        res.status(500).json({
+            message: "Server Err",
+            status_code: 500
+        });
+    }
+});
+
+app.get("/count-events", async function (req, res) {
+    try {
+        const count = await eventModel.countDocuments();
+        res.status(200).json({
+            message: "Events Counted Successfully",
+            count: count,
+            status_code: 500
+        });
+    }
+    catch (error) {
+        console.log("SERVER ERR: ", error);
+        res.status(500).json({
+            message: "Server Err",
+            status_code: 500
+        });
+    }
+});
+
+app.delete("/del-events", async function (req, res) {
+    try {
+        const deletedCount = await eventModel.deleteMany();
+        res.status(200).json({
+            message: "Events Deleted Successfully",
+            count: deletedCount,
+            status_code: 500
         });
     }
     catch (error) {
