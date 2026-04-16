@@ -2,8 +2,12 @@ import http from "k6/http";
 import { sleep } from "k6";
 
 export const options = {
-    vus: 750,
-    duration: "60s",
+    stages: [
+        { duration: "10s", target: 200 },  // ramp up to 200
+        { duration: "10s", target: 500 },  // ramp up to 500
+        { duration: "10s", target: 1000 }, // ramp up to 1000
+        { duration: "20s", target: 1000 }, // stay at 1000
+    ],
     noConnectionReuse: false
 };
 

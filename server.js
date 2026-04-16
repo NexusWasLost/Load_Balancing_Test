@@ -75,6 +75,14 @@ app.delete("/del-events", async function (req, res) {
     }
 });
 
-app.listen(3000, function () {
+app.get("/queue-status", async function (req, res) {
+    const counts = await q.getJobCounts();
+    res.json(counts);
+});
+
+const server = app.listen(3000, function () {
     console.log("App Listening on PORT 3K...");
 })
+
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;

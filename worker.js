@@ -52,7 +52,7 @@ const worker = new Worker("write-events", async function (job) {
 
     await writeAndFlush();
 
-}, { connection, concurrency: 1 });
+}, { connection, concurrency: 50 });
 attachedListenersToWorker(worker);
 
 //fallback mechanism
