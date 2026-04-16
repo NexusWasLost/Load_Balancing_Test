@@ -6,31 +6,65 @@ import eventModel from "./model/schema.js";
 const connection = new IORedis({ maxRetriesPerRequest: null });
 
 function attachedListenersToWorker(worker) {
-    worker.on("completed", function (job) {
-        console.log(`${job.id} has completed!`);
-    });
+    // worker.on("completed", function (job) {
+    //     console.log(`${job.id} has completed!`);
+    // });
 
     worker.on("failed", function (job, err) {
         console.log(`${job.id} has failed with ${err.message}`);
     });
 }
 
-const worker = new Worker("write-events", async function (job) {
+//write counter
+let write_counter = 0;
+//batch size
+const BATCH_SIZE = 25;
+//global batch buffer
+let batchBuffer = [];
 
-    const eventItem = job.data.item;
-    console.log(eventItem);
+async function writeAndFlush() {
+    //drain the batch buffer to a local buffer and empty the global buffer
+    let localBuffer = [...batchBuffer];
+    batchBuffer = [];
 
-    try{
-        const ev = await eventModel.insertOne({
-            eventName: eventItem.eventName,
-            timestamp: eventItem.timestamp,
-            meta: eventItem.meta
+    try {
+
+        let formattedBuffer = localBuffer.map(function (item) {
+            return {
+                eventName: item.eventName || null,
+                timestamp: item.timestamp || Date.now(),
+                meta: item.meta || null
+            };
         });
-        console.log(ev);
+
+        const ev = await eventModel.insertMany(formattedBuffer, { ordered: false });
+        write_counter++;
     }
-    catch(error){
+    catch (error) {
         console.log("[WORKER ERR]: ", error);
     }
+}
+
+const worker = new Worker("write-events", async function (job) {
+
+    batchBuffer.push(job.data.item);
+    if (batchBuffer.length < BATCH_SIZE) return;
+
+    await writeAndFlush();
 
 }, { connection, concurrency: 1 });
 attachedListenersToWorker(worker);
+
+//fallback mechanism
+setInterval(async function () {
+    try {
+        if (batchBuffer.length <= 0) return;
+
+        await writeAndFlush();
+        console.log("Fallback triggererd");
+        console.log("Total Writes: ", write_counter);
+    }
+    catch (error) {
+        console.log("[WORKER ERR]: ", error);
+    }
+}, 10000);
