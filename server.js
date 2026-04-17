@@ -22,7 +22,8 @@ app.post("/event", async function (req, res) {
                 eventName: eventName,
                 timestamp: timestamp,
                 meta: meta
-            }
+            },
+            enQTime: Date.now()
         });
 
         res.status(200).json({
